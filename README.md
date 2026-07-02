@@ -51,6 +51,7 @@ placement-platform/
 │   │   ├── __init__.py
 │   │   ├── auth_service.py
 │   │   ├── application_service.py
+|   |   |── company_service.py
 │   │   ├── note_service.py
 │   │   └── resume_service.py
 │   │
