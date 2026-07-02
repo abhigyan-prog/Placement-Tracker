@@ -11,32 +11,77 @@ A RESTful backend API for managing campus placement processes — built with Fas
 - **Authentication:** JWT (PyJWT)
 - **Validation:** Pydantic
 
-## Features
-
-- JWT-based user authentication (register, login, protected routes)
-- Role-based access for students and admins
-- Normalized PostgreSQL schema with version-controlled migrations
-- Layered architecture: routers → services → ORM → database
-- Interactive API documentation via Swagger UI at `/docs`
-
 ## Project Structure
 
 ```
-placement-management-platform/
+placement-platform/
+│
 ├── app/
-│   ├── main.py            # FastAPI app entry point
-│   ├── database.py        # Database connection and session
-│   ├── models/            # SQLAlchemy ORM models
-│   ├── schemas/           # Pydantic request/response schemas
-│   ├── routers/           # API route handlers
-│   ├── services/          # Business logic layer
-│   └── auth/              # JWT authentication utilities
-├── alembic/               # Database migration files
-├── alembic.ini
+│   ├── __init__.py
+│   ├── main.py                  # FastAPI app entry point
+│   ├── config.py                # Settings via pydantic-settings (.env loader)
+│   ├── database.py              # DB engine + SessionLocal + Base
+│   │
+│   ├── models/                  # SQLAlchemy ORM models (DB tables)
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── company.py
+│   │   ├── application.py
+│   │   ├── note.py
+│   │   └── resume.py
+│   │
+│   ├── schemas/                 # Pydantic schemas (request/response shapes)
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── company.py
+│   │   ├── application.py
+│   │   ├── note.py
+│   │   └── resume.py
+│   │
+│   ├── routers/                 # FastAPI route handlers (thin controllers)
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── companies.py
+│   │   ├── applications.py
+│   │   ├── notes.py
+│   │   ├── dashboard.py
+│   │   └── resumes.py
+│   │
+│   ├── services/                # Business logic (called by routers)
+│   │   ├── __init__.py
+│   │   ├── auth_service.py
+│   │   ├── application_service.py
+│   │   ├── note_service.py
+│   │   └── resume_service.py
+│   │
+│   └── core/                    # Shared utilities
+│       ├── __init__.py
+│       ├── security.py          # JWT creation, password hashing
+│       └── dependencies.py      # get_db(), get_current_user()
+│
+├── alembic/                     # Database migrations
+│   ├── env.py
+│   └── versions/
+│
+├── .env                         # Secret environment variables (never commit!)
+├── .env.example                 # Template for .env (safe to commit)
+├── .gitignore
 ├── requirements.txt
-├── .env.example
 └── README.md
 ```
+
+## Architecture
+
+The project follows a layered architecture with strict separation of concerns:
+
+```
+Request → Router → Service → ORM → PostgreSQL
+```
+
+- **Routers** handle HTTP only — parsing requests, returning responses
+- **Services** contain all business logic
+- **Models** define database structure via SQLAlchemy ORM
+- **Schemas** validate incoming data and shape responses via Pydantic
 
 ## Getting Started
 
@@ -71,8 +116,6 @@ uvicorn app.main:app --reload
 
 ### Environment Variables
 
-Create a `.env` file in the root directory using `.env.example` as reference:
-
 ```
 DATABASE_URL=postgresql://username:password@localhost:5432/placement_db
 SECRET_KEY=your-secret-key-here
@@ -88,8 +131,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 | POST | `/auth/register` | Register a new user |
 | POST | `/auth/login` | Login and receive JWT token |
 | GET | `/auth/me` | Get current authenticated user |
+| PATCH | `/auth/me` | Update current user profile |
 
-> CRUD endpoints for students, companies, and applications are under active development.
+> CRUD endpoints for companies, applications, notes, and resume upload are under active development.
 
 ## API Documentation
 
@@ -99,11 +143,13 @@ Once the server is running, visit:
 
 ## Roadmap
 
-- [x] Project setup and database connection
-- [x] SQLAlchemy ORM models with normalized schema
+- [x] Project setup, database connection
+- [x] SQLAlchemy ORM models with normalized schema (users, companies, applications, notes, resumes)
 - [x] Alembic database migrations
-- [x] JWT authentication — register, login, protected routes
-- [ ] CRUD endpoints for students, companies, and applications
+- [x] JWT authentication — register, login, protected routes, update profile
+- [ ] Full CRUD for companies and applications with ownership checks
+- [ ] Notes CRUD linked to applications
 - [ ] Search, filters, and pagination
+- [ ] Dashboard stats endpoint
 - [ ] Resume PDF upload
-
+- [ ] Tests for auth and core CRUD
