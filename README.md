@@ -134,7 +134,27 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 | GET | `/auth/me` | Get current authenticated user |
 | PATCH | `/auth/me` | Update current user profile |
 
-> CRUD endpoints for companies, applications, notes, and resume upload are under active development.
+### Companies
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/companies/` | Add a new company |
+| GET | `/companies/` | Get all companies |
+| GET | `/companies/{id}` | Get company by ID |
+| PATCH | `/companies/{id}` | Update company details |
+| DELETE | `/companies/{id}` | Delete a company |
+
+### Applications
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/applications/` | Create a new application |
+| GET | `/applications/` | Get all applications for current user |
+| GET | `/applications/{id}` | Get application by ID |
+| PATCH | `/applications/{id}` | Update application basic information |
+| PATCH | `/applications/{id}/status` | Update application status |
+| DELETE | `/applications/{id}` | Delete an application |
+
+
+> Notes, resume upload, and dashboard endpoints are under active development.
 
 ## API Documentation
 
@@ -148,7 +168,7 @@ Once the server is running, visit:
 - [x] SQLAlchemy ORM models with normalized schema (users, companies, applications, notes, resumes)
 - [x] Alembic database migrations
 - [x] JWT authentication — register, login, protected routes, update profile
-- [ ] Full CRUD for companies and applications with ownership checks
+- [x] Full CRUD for companies and applications with ownership checks
 - [ ] Notes CRUD linked to applications
 - [ ] Search, filters, and pagination
 - [ ] Dashboard stats endpoint

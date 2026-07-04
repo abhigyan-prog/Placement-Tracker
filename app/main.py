@@ -1,11 +1,12 @@
 from fastapi import FastAPI
-from app.routers import auth, companies
+from app.routers import auth, companies,applications
 import app.models
 app=FastAPI()
 
-@app.get("/")
+@app.get("/health")
 def welcome():
     return{"message" : "Welcome to Placement tracker"}
 
 app.include_router(auth.router)
 app.include_router(companies.router)
+app.include_router(applications.router)
