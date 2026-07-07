@@ -51,7 +51,7 @@ placement-platform/
 │   │   ├── __init__.py
 │   │   ├── auth_service.py
 │   │   ├── application_service.py
-|   |   |── company_service.py
+│   │   ├── company_service.py
 │   │   ├── note_service.py
 │   │   └── resume_service.py
 │   │
@@ -95,7 +95,7 @@ Request → Router → Service → ORM → PostgreSQL
 ```bash
 # Clone the repository
 git clone https://github.com/abhigyan-prog/Placement-Tracker.git
-cd placement-management-platform
+cd Placement-Tracker
 
 # Create virtual environment
 python -m venv venv
@@ -153,14 +153,36 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 | PATCH | `/applications/{id}/status` | Update application status |
 | DELETE | `/applications/{id}` | Delete an application |
 
+### Notes
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/notes/` | Create a note |
+| GET | `/notes/` | Get all notes for current user (optional `note_type` filter) |
+| GET | `/notes/{id}` | Get note by ID |
+| PATCH | `/notes/{id}` | Update a note |
+| DELETE | `/notes/{id}` | Delete a note |
+| GET | `/applications/{application_id}/notes` | Get all notes for an application (optional `note_type` filter) |
 
-> Notes, resume upload, and dashboard endpoints are under active development.
+> `GET /applications/{application_id}/notes` is defined in the applications router since it already carries the `/applications` prefix — the underlying logic still lives in `note_service.py`.
+
+> Resume upload and dashboard endpoints are under active development.
+
+## Deployment
+
+Deployed on [Render](https://render.com) with GitHub auto-deploy — every push to `main` triggers a fresh build, and Alembic migrations run automatically as part of it.
+
+**Live API:** `https://placement-tracker-283e.onrender.com`
+**Live Swagger UI:** `https://placement-tracker-283e.onrender.com/docs`
+
+Auth, Companies, Applications, and Notes have all been tested against the live deployment via Postman.
 
 ## API Documentation
 
 Once the server is running, visit:
 - **Swagger UI:** `http://localhost:8000/docs`
 - **ReDoc:** `http://localhost:8000/redoc`
+
+> **Note:** The login endpoint intentionally accepts a JSON body (`email`/`password`) instead of `OAuth2PasswordRequestForm`, so Swagger's "Authorize" button won't auto-populate a bearer token. This is a deliberate design choice, not a bug. All endpoints — including protected routes — have been tested via Postman instead.
 
 ## Roadmap
 
@@ -169,7 +191,7 @@ Once the server is running, visit:
 - [x] Alembic database migrations
 - [x] JWT authentication — register, login, protected routes, update profile
 - [x] Full CRUD for companies and applications with ownership checks
-- [ ] Notes CRUD linked to applications
+- [x] Notes CRUD linked to applications
 - [ ] Search, filters, and pagination
 - [ ] Dashboard stats endpoint
 - [ ] Resume PDF upload
