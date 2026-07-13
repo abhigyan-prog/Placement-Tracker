@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter,status,Depends
 from sqlalchemy.orm import Session
 from app.core.dependencies import get_current_user, get_db
-from app.schemas.application import ApplicationCreate, ApplicationResponse, ApplicationStatusUpdate, ApplicationUpdate
+from app.schemas.application import ApplicationCreate, ApplicationFilter, ApplicationResponse, ApplicationStatusUpdate, ApplicationUpdate, PaginatedApplicationResponse
 from app.schemas.note import NoteResponse
 from app.services import note_service
 from app.services.application_service import create_application, delete_application, get_application_by_id, get_applications, update_application, update_application_status
@@ -16,9 +16,19 @@ router=APIRouter(
 def create(application:ApplicationCreate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     return create_application(application,db,current_user)
 
-@router.get("/",response_model=list[ApplicationResponse])
-def get_all(db:Session=Depends(get_db),current_user=Depends(get_current_user)):
-    return get_applications(db,current_user)
+from fastapi import Depends
+
+@router.get("/", response_model=PaginatedApplicationResponse)
+def get(
+    filters: ApplicationFilter = Depends(),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    return get_applications(
+        db=db,
+        current_user=current_user,
+        filters=filters,
+    )
 
 @router.get("/{application_id}",response_model=ApplicationResponse)
 def get(application_id:UUID,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
@@ -39,3 +49,4 @@ def delete(application_id:UUID,db:Session=Depends(get_db),current_user=Depends(g
 @router.get("/{application_id}/notes", response_model=list[NoteResponse])
 def get_notes_by_application(application_id: UUID,db: Session = Depends(get_db),current_user = Depends(get_current_user),):
     return note_service.get_notes_by_application(application_id,db,current_user)
+

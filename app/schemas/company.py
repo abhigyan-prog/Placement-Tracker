@@ -24,3 +24,9 @@ class CompanyUpdate(BaseModel):
     name:str|None=None
     website:str|None=None
     industry:str|None=None
+
+class CompanySummary(BaseModel):
+    id:UUID
+    name:str
+
+    model_config = ConfigDict(from_attributes=True)

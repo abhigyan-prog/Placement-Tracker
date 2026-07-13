@@ -6,10 +6,23 @@ A RESTful backend API for managing campus placement processes — built with Fas
 
 - **Framework:** FastAPI (Python)
 - **Database:** PostgreSQL
-- **ORM:** SQLAlchemy
+- **ORM:** SQLAlchemy 2.0
 - **Migrations:** Alembic
 - **Authentication:** JWT (PyJWT)
-- **Validation:** Pydantic
+- **Validation:** Pydantic v2
+
+## Features
+
+-   JWT Authentication
+-   Resource-level authorization
+-   Company CRUD
+-   Application CRUD
+-   Notes CRUD
+-   Search, filtering, and pagination for applications
+-   Service-layer architecture
+-   SQLAlchemy 2.0
+-   PostgreSQL enums
+-   UUID primary keys
 
 ## Project Structure
 
@@ -147,11 +160,23 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/applications/` | Create a new application |
-| GET | `/applications/` | Get all applications for current user |
+| GET | `/applications/` | Get applications with optional filtering and pagination |
 | GET | `/applications/{id}` | Get application by ID |
 | PATCH | `/applications/{id}` | Update application basic information |
 | PATCH | `/applications/{id}/status` | Update application status |
 | DELETE | `/applications/{id}` | Delete an application |
+
+#### Application Query Parameters
+
+  Parameter        Description
+  ---------------- -------------------------------------------
+  `status`         Filter by application status
+  `company_name`   Search by company name (case-insensitive)
+  `role`           Search by role (case-insensitive)
+  `from_date`      Applications on or after the given date
+  `to_date`        Applications on or before the given date
+  `page`           Page number (default: 1)
+  `limit`          Results per page (default: 10)
 
 ### Notes
 | Method | Endpoint | Description |
@@ -172,6 +197,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 Deployed on [Render](https://render.com) with GitHub auto-deploy — every push to `main` triggers a fresh build, and Alembic migrations run automatically as part of it.
 
 **Live API:** `https://placement-tracker-283e.onrender.com`
+
 **Live Swagger UI:** `https://placement-tracker-283e.onrender.com/docs`
 
 Auth, Companies, Applications, and Notes have all been tested against the live deployment via Postman.
@@ -192,7 +218,7 @@ Once the server is running, visit:
 - [x] JWT authentication — register, login, protected routes, update profile
 - [x] Full CRUD for companies and applications with ownership checks
 - [x] Notes CRUD linked to applications
-- [ ] Search, filters, and pagination
+- [x] Search, filters, and pagination
 - [ ] Dashboard stats endpoint
 - [ ] Resume PDF upload
 - [ ] Tests for auth and core CRUD

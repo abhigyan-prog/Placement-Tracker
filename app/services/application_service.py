@@ -2,12 +2,12 @@ from uuid import UUID
 
 from fastapi import HTTPException,status
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.models.application import Application
 from app.models.company import Company
 from app.models.user import User
-from app.schemas.application import ApplicationCreate, ApplicationStatusUpdate, ApplicationUpdate
+from app.schemas.application import ApplicationCreate, ApplicationFilter, ApplicationStatusUpdate, ApplicationUpdate, PaginatedApplicationResponse
 
 
 def create_application(application: ApplicationCreate,db: Session,current_user: User) -> Application:
@@ -34,10 +34,35 @@ def create_application(application: ApplicationCreate,db: Session,current_user: 
 
     return new_application
 
-def get_applications(db:Session,current_user:User)->list[Application]:
+def get_applications(db:Session,current_user:User,filters:ApplicationFilter)->PaginatedApplicationResponse:
     stmt=select(Application).where(Application.user_id==current_user.id)
+    if filters.status:
+        stmt=stmt.where(Application.status==filters.status)
+    if filters.company_name:
+        stmt = (
+            stmt.join(Company)
+            .where(Company.name.ilike(f"%{filters.company_name}%"))
+        )
+    if filters.role:
+        stmt=stmt.where(Application.role.ilike(f"%{filters.role}%"))
+    if filters.from_date:
+        stmt=stmt.where(Application.application_date>=filters.from_date)
+    if filters.to_date:
+        stmt=stmt.where(
+            Application.application_date<=filters.to_date
+        )
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.scalar(count_stmt)
+    offset = (filters.page - 1) * filters.limit
+    stmt = stmt.offset(offset).limit(filters.limit)
     applications=db.scalars(stmt).all()
-    return applications
+    return {
+        "total": total,
+        "page": filters.page,
+        "limit": filters.limit,
+        "items": applications,
+    }
+    
 
 def get_application_by_id(application_id:UUID,db:Session,current_user:User)->Application:
     application=db.scalar(select(Application).where(Application.id==application_id))
@@ -125,3 +150,4 @@ def delete_application(application_id : UUID, db : Session, current_user : User)
         )
     db.delete(application)
     db.commit()
+
