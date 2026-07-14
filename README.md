@@ -19,6 +19,7 @@ A RESTful backend API for managing campus placement processes — built with Fas
 -   Application CRUD
 -   Notes CRUD
 -   Search, filtering, and pagination for applications
+-   Dashboard Analytics – View personalized application statistics, including status distribution, success rate, active     applications, and monthly application insights.
 -   Service-layer architecture
 -   SQLAlchemy 2.0
 -   PostgreSQL enums
@@ -188,9 +189,29 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 | DELETE | `/notes/{id}` | Delete a note |
 | GET | `/applications/{application_id}/notes` | Get all notes for an application (optional `note_type` filter) |
 
+### Dashboard
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/dashboard/` | Get dashboard statistics for the current user |
+
+**Response includes:**
+- `total_applications`
+- `active_applications`
+- `offers_received`
+- `rejections`
+- `success_rate`
+- `applications_this_month`
+- `by_status`
+  - Applied
+  - OA
+  - Interview
+  - Rejected
+  - Offer
+
 > `GET /applications/{application_id}/notes` is defined in the applications router since it already carries the `/applications` prefix — the underlying logic still lives in `note_service.py`.
 
-> Resume upload and dashboard endpoints are under active development.
+> Resume upload is under active development.
 
 ## Deployment
 
@@ -219,6 +240,6 @@ Once the server is running, visit:
 - [x] Full CRUD for companies and applications with ownership checks
 - [x] Notes CRUD linked to applications
 - [x] Search, filters, and pagination
-- [ ] Dashboard stats endpoint
+- [x] Dashboard stats endpoint
 - [ ] Resume PDF upload
 - [ ] Tests for auth and core CRUD

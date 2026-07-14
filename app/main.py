@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, companies,applications, notes
+from app.routers import auth, companies,applications, dashboard, notes
 import app.models
 app=FastAPI()
 
@@ -11,3 +11,4 @@ app.include_router(auth.router)
 app.include_router(companies.router)
 app.include_router(applications.router)
 app.include_router(notes.router)
+app.include_router(dashboard.router)
