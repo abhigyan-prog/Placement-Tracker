@@ -48,6 +48,7 @@ placement-platform/
 │   │   ├── __init__.py
 │   │   ├── user.py
 │   │   ├── company.py
+│   │   ├── dashboard.py
 │   │   ├── application.py
 │   │   ├── note.py
 │   │   └── resume.py
@@ -66,6 +67,7 @@ placement-platform/
 │   │   ├── auth_service.py
 │   │   ├── application_service.py
 │   │   ├── company_service.py
+│   │   ├── dashboard_service.py
 │   │   ├── note_service.py
 │   │   └── resume_service.py
 │   │
