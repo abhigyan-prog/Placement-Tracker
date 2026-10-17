@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
@@ -11,7 +12,8 @@ from app.schemas.resume import ResumeUpdate
 
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
-UPLOAD_DIR = "uploads"
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+UPLOAD_DIR = BACKEND_DIR / "uploads"
 
 
 async def resume_upload(
@@ -35,12 +37,9 @@ async def resume_upload(
             detail="File size should not exceed 5 MB.",
         )
 
-    upload_dir = os.path.join(
-        UPLOAD_DIR,
-        str(current_user.id),
-    )
+    upload_dir = UPLOAD_DIR / str(current_user.id)
 
-    os.makedirs(upload_dir, exist_ok=True)
+    upload_dir.mkdir(parents=True, exist_ok=True)
 
     resume = Resume(
         user_id=current_user.id,
@@ -55,15 +54,12 @@ async def resume_upload(
 
         filename = f"{resume.id}.pdf"
 
-        file_path = os.path.join(
-            upload_dir,
-            filename,
-        )
+        file_path = upload_dir / filename
 
         with open(file_path, "wb") as f:
             f.write(content)
 
-        resume.file_path = file_path
+        resume.file_path = str(file_path)
 
         db.commit()
         db.refresh(resume)
