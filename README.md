@@ -1,247 +1,165 @@
-# Placement Management Platform
+# Placement Tracker
 
-A RESTful backend API for managing campus placement processes — built with FastAPI, PostgreSQL, and JWT authentication.
+A full-stack application for organizing the job search. Track applications from
+submission through offer, keep company and interview notes together, and manage
+the resume versions used for applications.
 
-## Tech Stack
+**Live API:** [placement-tracker-283e.onrender.com](https://placement-tracker-283e.onrender.com) ·
+[Interactive API docs](https://placement-tracker-283e.onrender.com/docs)
 
-- **Framework:** FastAPI (Python)
-- **Database:** PostgreSQL
-- **ORM:** SQLAlchemy 2.0
-- **Migrations:** Alembic
-- **Authentication:** JWT (PyJWT)
-- **Validation:** Pydantic v2
+## What it does
 
-## Features
+- **Application tracking:** Create and update applications, change their status,
+  and search or filter by company, role, status, and date.
+- **Company records:** Keep company details in one place and associate them
+  with applications.
+- **Notes:** Save general notes or notes associated with a company or
+  application.
+- **Resume management:** Upload PDF resume versions, choose an active version,
+  and associate resumes with applications.
+- **Dashboard:** Review application totals and status summaries.
+- **Accounts:** Register and sign in with JWT authentication. API resources are
+  scoped to the signed-in user.
 
--   JWT Authentication
--   Resource-level authorization
--   Company CRUD
--   Application CRUD
--   Notes CRUD
--   Search, filtering, and pagination for applications
--   Dashboard Analytics – View personalized application statistics, including status distribution, success rate, active     applications, and monthly application insights.
--   Service-layer architecture
--   SQLAlchemy 2.0
--   PostgreSQL enums
--   UUID primary keys
+## Project highlights
 
-## Project Structure
+- FastAPI routers delegate application logic to service modules.
+- Pydantic schemas validate request data and define API responses.
+- SQLAlchemy models and Alembic migrations manage the PostgreSQL schema.
+- The React client uses a shared API helper and feature-based views.
+- The health endpoint checks database connectivity as well as API availability.
 
-```
-placement-platform/
-│
-├── app/
-│   ├── __init__.py
-│   ├── main.py                  # FastAPI app entry point
-│   ├── config.py                # Settings via pydantic-settings (.env loader)
-│   ├── database.py              # DB engine + SessionLocal + Base
-│   │
-│   ├── models/                  # SQLAlchemy ORM models (DB tables)
-│   │   ├── __init__.py
-│   │   ├── user.py
-│   │   ├── company.py
-│   │   ├── application.py
-│   │   ├── note.py
-│   │   └── resume.py
-│   │
-│   ├── schemas/                 # Pydantic schemas (request/response shapes)
-│   │   ├── __init__.py
-│   │   ├── user.py
-│   │   ├── company.py
-│   │   ├── dashboard.py
-│   │   ├── application.py
-│   │   ├── note.py
-│   │   └── resume.py
-│   │
-│   ├── routers/                 # FastAPI route handlers (thin controllers)
-│   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   ├── companies.py
-│   │   ├── applications.py
-│   │   ├── notes.py
-│   │   ├── dashboard.py
-│   │   └── resumes.py
-│   │
-│   ├── services/                # Business logic (called by routers)
-│   │   ├── __init__.py
-│   │   ├── auth_service.py
-│   │   ├── application_service.py
-│   │   ├── company_service.py
-│   │   ├── dashboard_service.py
-│   │   ├── note_service.py
-│   │   └── resume_service.py
-│   │
-│   └── core/                    # Shared utilities
-│       ├── __init__.py
-│       ├── security.py          # JWT creation, password hashing
-│       └── dependencies.py      # get_db(), get_current_user()
-│
-├── alembic/                     # Database migrations
-│   ├── env.py
-│   └── versions/
-│
-├── .env                         # Secret environment variables (never commit!)
-├── .env.example                 # Template for .env (safe to commit)
-├── .gitignore
-├── requirements.txt
-└── README.md
+## Technology
+
+| Area | Technologies |
+| --- | --- |
+| Frontend | React, Vite, JavaScript |
+| API | Python, FastAPI, Pydantic |
+| Database | PostgreSQL, SQLAlchemy |
+| Migrations | Alembic |
+| Authentication | JWT |
+
+## Repository structure
+
+```text
+backend/
+  app/
+    core/         Authentication and shared dependencies
+    models/       SQLAlchemy models
+    routers/      API endpoints
+    schemas/      Request and response schemas
+    services/     Application logic
+  alembic/        Database migrations
+  tests/          Backend tests
+frontend/
+  src/
+    api/          API client
+    components/   Shared UI
+    features/     Dashboard and tracker screens
 ```
 
-## Architecture
+## Getting started
 
-The project follows a layered architecture with strict separation of concerns:
+### Requirements
 
-```
-Request → Router → Service → ORM → PostgreSQL
-```
-
-- **Routers** handle HTTP only — parsing requests, returning responses
-- **Services** contain all business logic
-- **Models** define database structure via SQLAlchemy ORM
-- **Schemas** validate incoming data and shape responses via Pydantic
-
-## Getting Started
-
-### Prerequisites
 - Python 3.10+
 - PostgreSQL
+- Node.js 20.19+ or 22.12+
 
-### Installation
+### Configure and run the API
 
-```bash
-# Clone the repository
-git clone https://github.com/abhigyan-prog/Placement-Tracker.git
-cd Placement-Tracker
+From the repository root:
 
-# Create virtual environment
+```powershell
+cd backend
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+Copy-Item .env.example .env
+```
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your database URL and secret key
+Set the values in `backend/.env`, then apply the migrations and start the API:
 
-# Run database migrations
+```powershell
 alembic upgrade head
-
-# Start the server
 uvicorn app.main:app --reload
 ```
 
-### Environment Variables
+The API is available at `http://localhost:8000`. Interactive documentation is
+at `http://localhost:8000/docs`.
 
+### Run the frontend
+
+In a second terminal, from the repository root:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
 ```
-DATABASE_URL=postgresql://username:password@localhost:5432/placement_db
-SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
 
-## API Endpoints
+For local development, the frontend defaults to the API at
+`http://localhost:8000`. Set `VITE_API_URL` if the API uses a different origin.
+For production builds, set `VITE_API_URL` to the deployed API URL.
 
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register a new user |
-| POST | `/auth/login` | Login and receive JWT token |
-| GET | `/auth/me` | Get current authenticated user |
-| PATCH | `/auth/me` | Update current user profile |
+## Configuration
 
-### Companies
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/companies/` | Add a new company |
-| GET | `/companies/` | Get all companies |
-| GET | `/companies/{id}` | Get company by ID |
-| PATCH | `/companies/{id}` | Update company details |
-| DELETE | `/companies/{id}` | Delete a company |
+The backend reads the following values from its environment or `backend/.env`:
 
-### Applications
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/applications/` | Create a new application |
-| GET | `/applications/` | Get applications with optional filtering and pagination |
-| GET | `/applications/{id}` | Get application by ID |
-| PATCH | `/applications/{id}` | Update application basic information |
-| PATCH | `/applications/{id}/status` | Update application status |
-| DELETE | `/applications/{id}` | Delete an application |
+| Variable | Description |
+| --- | --- |
+| `SQLALCHEMY_DATABASE_URL` | PostgreSQL connection URL |
+| `SECRET_KEY` | Secret used to sign JWT access tokens |
+| `ALGORITHM` | JWT signing algorithm, typically `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime |
+| `CORS_ORIGINS` | Comma-separated list of allowed frontend origins |
 
-#### Application Query Parameters
+Never commit `.env` files or production secrets.
 
-  Parameter        Description
-  ---------------- -------------------------------------------
-  `status`         Filter by application status
-  `company_name`   Search by company name (case-insensitive)
-  `role`           Search by role (case-insensitive)
-  `from_date`      Applications on or after the given date
-  `to_date`        Applications on or before the given date
-  `page`           Page number (default: 1)
-  `limit`          Results per page (default: 10)
+## API overview
 
-### Notes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/notes/` | Create a note |
-| GET | `/notes/` | Get all notes for current user (optional `note_type` filter) |
-| GET | `/notes/{id}` | Get note by ID |
-| PATCH | `/notes/{id}` | Update a note |
-| DELETE | `/notes/{id}` | Delete a note |
-| GET | `/applications/{application_id}/notes` | Get all notes for an application (optional `note_type` filter) |
+Protected routes require an `Authorization: Bearer <token>` header. Login
+accepts a JSON body containing `email` and `password`.
 
-### Dashboard
+| Feature | Endpoints |
+| --- | --- |
+| Authentication | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `PATCH /auth/me` |
+| Companies | `GET` and `POST /companies/`; `GET`, `PATCH`, and `DELETE /companies/{id}` |
+| Applications | `GET` and `POST /applications/`; `GET`, `PATCH`, and `DELETE /applications/{id}` |
+| Application status | `PATCH /applications/{id}/status` |
+| Application notes | `GET /applications/{id}/notes` |
+| Notes | `GET` and `POST /notes/`; `GET`, `PATCH`, and `DELETE /notes/{id}` |
+| Dashboard | `GET /dashboard/` |
+| Resumes | `GET` and `POST /resumes/`; `GET`, `PATCH`, and `DELETE /resumes/{id}` |
+| Activate a resume | `PATCH /resumes/{id}/activate` |
+| Health check | `GET /health` |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/dashboard/` | Get dashboard statistics for the current user |
-
-**Response includes:**
-- `total_applications`
-- `active_applications`
-- `offers_received`
-- `rejections`
-- `success_rate`
-- `applications_this_month`
-- `by_status`
-  - Applied
-  - OA
-  - Interview
-  - Rejected
-  - Offer
-
-> `GET /applications/{application_id}/notes` is defined in the applications router since it already carries the `/applications` prefix — the underlying logic still lives in `note_service.py`.
-
-> Resume upload is under active development.
+Application listing supports status, company, role, and date filters, along
+with `page` and `limit` pagination parameters.
 
 ## Deployment
 
-Deployed on [Render](https://render.com) with GitHub auto-deploy — every push to `main` triggers a fresh build, and Alembic migrations run automatically as part of it.
+The API can be deployed as a Render web service with `backend` as its root
+directory. Use the following build commands:
 
-**Live API:** `https://placement-tracker-283e.onrender.com`
+```bash
+pip install -r requirements.txt
+alembic upgrade head
+```
 
-**Live Swagger UI:** `https://placement-tracker-283e.onrender.com/docs`
+Use this start command:
 
-Auth, Companies, Applications, and Notes have all been tested against the live deployment via Postman.
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
 
-## API Documentation
+Configure the backend environment variables listed above, including
+`CORS_ORIGINS` for the deployed frontend's origin.
 
-Once the server is running, visit:
-- **Swagger UI:** `http://localhost:8000/docs`
-- **ReDoc:** `http://localhost:8000/redoc`
+For a Render Static Site, use `frontend` as the root directory, `npm ci && npm run build`
+as the build command, and `dist` as the publish directory. Set `VITE_API_URL` to
+the deployed API URL before the build.
 
-> **Note:** The login endpoint intentionally accepts a JSON body (`email`/`password`) instead of `OAuth2PasswordRequestForm`, so Swagger's "Authorize" button won't auto-populate a bearer token. This is a deliberate design choice, not a bug. All endpoints — including protected routes — have been tested via Postman instead.
-
-## Roadmap
-
-- [x] Project setup, database connection
-- [x] SQLAlchemy ORM models with normalized schema (users, companies, applications, notes, resumes)
-- [x] Alembic database migrations
-- [x] JWT authentication — register, login, protected routes, update profile
-- [x] Full CRUD for companies and applications with ownership checks
-- [x] Notes CRUD linked to applications
-- [x] Search, filters, and pagination
-- [x] Dashboard stats endpoint
-- [ ] Resume PDF upload
-- [ ] Tests for auth and core CRUD
+Resume uploads are stored under `backend/uploads`. Render's local filesystem is
+ephemeral; configure persistent storage at that path or use durable object
+storage if uploaded resumes must survive restarts and deployments.
