@@ -37,6 +37,7 @@ the resume versions used for applications.
 | Database | PostgreSQL, SQLAlchemy |
 | Migrations | Alembic |
 | Authentication | JWT |
+| Resume storage | Supabase Storage |
 
 ## Repository structure
 
@@ -64,6 +65,7 @@ frontend/
 - Python 3.10+
 - PostgreSQL
 - Node.js 20.19+ or 22.12+
+- A Supabase project with a storage bucket for resumes
 
 ### Configure and run the API
 
@@ -112,6 +114,9 @@ The backend reads the following values from its environment or `backend/.env`:
 | `ALGORITHM` | JWT signing algorithm, typically `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime |
 | `CORS_ORIGINS` | Comma-separated list of allowed frontend origins |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SECRET_KEY` | Server-side Supabase key used by the API |
+| `SUPABASE_BUCKET` | Storage bucket for resume PDFs (defaults to `resumes`) |
 
 Never commit `.env` files or production secrets.
 
@@ -155,10 +160,10 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 Configure the backend environment variables listed above, including
 `CORS_ORIGINS` for the deployed frontend's origin.
 
-For a Render Static Site, use `frontend` as the root directory, `npm ci && npm run build`
-as the build command, and `dist` as the publish directory. Set `VITE_API_URL` to
-the deployed API URL before the build.
+For Vercel, set `frontend` as the root directory, use `npm run build` as the
+build command, and `dist` as the output directory. Set `VITE_API_URL` to the
+deployed API URL in the Vercel project environment before building.
 
-Resume uploads are stored under `backend/uploads`. Render's local filesystem is
-ephemeral; configure persistent storage at that path or use durable object
-storage if uploaded resumes must survive restarts and deployments.
+The API uses Neon for PostgreSQL and Supabase Storage for resume files. Set the
+Supabase URL, server-side key, and bucket name in the Render backend environment.
+Do not expose the Supabase secret key through frontend environment variables.
