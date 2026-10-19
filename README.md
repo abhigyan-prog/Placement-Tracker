@@ -4,8 +4,7 @@ A full-stack application for organizing the job search. Track applications from
 submission through offer, keep company and interview notes together, and manage
 the resume versions used for applications.
 
-**Live API:** [placement-tracker-283e.onrender.com](https://placement-tracker-283e.onrender.com) ·
-[Interactive API docs](https://placement-tracker-283e.onrender.com/docs)
+**Live Website:** https://placement-tracker-abhigyan8.vercel.app/
 
 ## What it does
 
