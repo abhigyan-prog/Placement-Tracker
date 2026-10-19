@@ -8,6 +8,7 @@ class ApplicationBase(BaseModel):
     role:str
     application_date:date
     company_id:UUID
+    resume_id:UUID|None = None
 
 class ApplicationCreate(ApplicationBase):
     pass
@@ -28,6 +29,7 @@ class ApplicationUpdate(BaseModel):
     role: str | None = None
     application_date: date | None = None
     company_id: UUID | None = None
+    resume_id: UUID | None = None
 
 class ApplicationStatusUpdate(BaseModel):
     status: ApplicationStatus

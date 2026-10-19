@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 
 from app.models.application import Application
 from app.models.company import Company
+from app.models.resume import Resume
 from app.models.user import User
 from app.schemas.application import ApplicationCreate, ApplicationFilter, ApplicationStatusUpdate, ApplicationUpdate, PaginatedApplicationResponse
 
@@ -25,6 +26,21 @@ def create_application(application: ApplicationCreate,db: Session,current_user: 
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this company",
         )
+
+    if application.resume_id is not None:
+        resume = db.scalar(
+            select(Resume).where(Resume.id == application.resume_id)
+        )
+        if resume is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Resume not found",
+            )
+        if resume.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this resume",
+            )
 
     new_application = Application(**application.model_dump(),user_id=current_user.id,)
 
@@ -111,6 +127,21 @@ def update_application(application_id: UUID,update_data: ApplicationUpdate,db: S
 
     updated_data = update_data.model_dump(exclude_unset=True)
 
+    if updated_data.get("resume_id") is not None:
+        resume = db.scalar(
+            select(Resume).where(Resume.id == updated_data["resume_id"])
+        )
+        if resume is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Resume not found",
+            )
+        if resume.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this resume",
+            )
+
     for field, value in updated_data.items():
         setattr(application, field, value)
 
@@ -150,4 +181,3 @@ def delete_application(application_id : UUID, db : Session, current_user : User)
         )
     db.delete(application)
     db.commit()
-

@@ -3,16 +3,31 @@ import { api } from '../api/client'
 
 const empty = { dashboard: null, applications: [], companies: [], notes: [], resumes: [] }
 
+async function loadApplications(token) {
+  const firstPage = await api('/applications/?page=1&limit=100', { token })
+  const pageCount = Math.ceil(firstPage.total / firstPage.limit)
+
+  if (pageCount <= 1) return firstPage.items
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_, index) =>
+      api(`/applications/?page=${index + 2}&limit=${firstPage.limit}`, { token }),
+    ),
+  )
+
+  return firstPage.items.concat(...remainingPages.map((page) => page.items))
+}
+
 async function loadPlacementData(token) {
-  const [dashboard, page, companies, notes, resumes] = await Promise.all([
+  const [dashboard, applications, companies, notes, resumes] = await Promise.all([
     api('/dashboard/', { token }),
-    api('/applications/?page=1&limit=100', { token }),
+    loadApplications(token),
     api('/companies/', { token }),
     api('/notes/', { token }),
     api('/resumes/', { token }),
   ])
 
-  return { dashboard, applications: page.items, companies, notes, resumes }
+  return { dashboard, applications, companies, notes, resumes }
 }
 
 export function usePlacementData(token) {
