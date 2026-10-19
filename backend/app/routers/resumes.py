@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 
 from app.core.dependencies import get_current_user, get_db
-from app.schemas.resume import ResumeResponse, ResumeUpdate
-from app.services.resume_service import activate_resume, delete_resume, get_resume_by_id, get_resumes, resume_upload, update_resume
+from app.schemas.resume import ResumeAccessResponse, ResumeResponse, ResumeUpdate
+from app.services.resume_service import activate_resume, delete_resume, get_resume_access_url, get_resume_by_id, get_resumes, resume_upload, update_resume
 
 router = APIRouter(
     prefix= "/resumes",
@@ -36,6 +36,15 @@ def get_by_id(
     current_user = Depends(get_current_user)
 ):
     return get_resume_by_id(id,db,current_user)
+
+@router.get("/{id}/signed-url", response_model=ResumeAccessResponse)
+def get_signed_url(
+    id: UUID,
+    download: bool = False,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    return get_resume_access_url(id, db, current_user, download=download)
 
 @router.patch("/{id}",response_model=ResumeResponse)
 def update_name(

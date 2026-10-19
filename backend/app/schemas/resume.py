@@ -16,3 +16,8 @@ class ResumeUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     
     version_name: str | None = None
+
+
+class ResumeAccessResponse(BaseModel):
+    url: str
+    expires_in: int
