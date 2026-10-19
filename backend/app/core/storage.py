@@ -1,0 +1,11 @@
+from supabase import Client, create_client
+
+from app.config import settings
+
+
+SUPABASE_BUCKET = settings.supabase_bucket
+
+supabase: Client = create_client(
+    settings.supabase_url,
+    settings.supabase_secret_key,
+)
