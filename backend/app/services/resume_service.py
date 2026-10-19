@@ -1,9 +1,12 @@
+import logging
 import os
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
+from httpx import HTTPError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from storage3.utils import StorageException
 
 from app.core.storage import supabase, SUPABASE_BUCKET
 from app.models.resume import Resume
@@ -12,6 +15,8 @@ from app.schemas.resume import ResumeUpdate
 
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
+SIGNED_URL_EXPIRES_IN = 300
+logger = logging.getLogger(__name__)
 
 
 async def resume_upload(
@@ -116,6 +121,40 @@ def get_resume_by_id(
         )
 
     return resume
+
+
+def get_resume_access_url(
+    resume_id: UUID,
+    db: Session,
+    current_user: User,
+    *,
+    download: bool = False,
+) -> dict[str, str | int]:
+    resume = get_resume_by_id(resume_id, db, current_user)
+    options = {"download": True} if download else None
+
+    try:
+        signed_url = supabase.storage.from_(SUPABASE_BUCKET).create_signed_url(
+            resume.file_path,
+            SIGNED_URL_EXPIRES_IN,
+            options,
+        )
+    except (StorageException, HTTPError) as error:
+        logger.exception("Could not create signed URL for resume %s", resume_id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not access the stored resume. Please try again.",
+        ) from error
+
+    url = signed_url.get("signedURL") or signed_url.get("signedUrl")
+    if not url:
+        logger.error("Supabase returned no signed URL for resume %s", resume_id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not access the stored resume. Please try again.",
+        )
+
+    return {"url": url, "expires_in": SIGNED_URL_EXPIRES_IN}
 
 
 def delete_resume(

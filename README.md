@@ -137,10 +137,14 @@ accepts a JSON body containing `email` and `password`.
 | Dashboard | `GET /dashboard/` |
 | Resumes | `GET` and `POST /resumes/`; `GET`, `PATCH`, and `DELETE /resumes/{id}` |
 | Activate a resume | `PATCH /resumes/{id}/activate` |
+| Preview or download a resume | `GET /resumes/{id}/signed-url` (add `?download=true` to download) |
 | Health check | `GET /health` |
 
 Application listing supports status, company, role, and date filters, along
 with `page` and `limit` pagination parameters.
+
+Resume preview and download links are short-lived Supabase signed URLs returned
+only to the authenticated owner of the resume.
 
 ## Deployment
 
