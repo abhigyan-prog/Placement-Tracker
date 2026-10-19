@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    supabase_url: str
+    supabase_secret_key: str
+    supabase_bucket: str = "resumes"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env")

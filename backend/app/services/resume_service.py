@@ -1,19 +1,17 @@
 import os
-from pathlib import Path
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.storage import supabase, SUPABASE_BUCKET
 from app.models.resume import Resume
 from app.models.user import User
 from app.schemas.resume import ResumeUpdate
 
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
-BACKEND_DIR = Path(__file__).resolve().parents[2]
-UPLOAD_DIR = BACKEND_DIR / "uploads"
 
 
 async def resume_upload(
@@ -22,7 +20,6 @@ async def resume_upload(
     db: Session,
     current_user: User,
 ) -> Resume:
-
     if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -37,10 +34,6 @@ async def resume_upload(
             detail="File size should not exceed 5 MB.",
         )
 
-    upload_dir = UPLOAD_DIR / str(current_user.id)
-
-    upload_dir.mkdir(parents=True, exist_ok=True)
-
     resume = Resume(
         user_id=current_user.id,
         version_name=version_name,
@@ -48,18 +41,26 @@ async def resume_upload(
         is_active=False,
     )
 
+    storage_path = None
+    uploaded_to_storage = False
+
     try:
         db.add(resume)
         db.flush()
 
-        filename = f"{resume.id}.pdf"
+        storage_path = f"{current_user.id}/{resume.id}.pdf"
 
-        file_path = upload_dir / filename
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            path=storage_path,
+            file=content,
+            file_options={
+                "content-type": "application/pdf",
+                "upsert": "false",
+            },
+        )
+        uploaded_to_storage = True
 
-        with open(file_path, "wb") as f:
-            f.write(content)
-
-        resume.file_path = str(file_path)
+        resume.file_path = storage_path
 
         db.commit()
         db.refresh(resume)
@@ -69,55 +70,61 @@ async def resume_upload(
     except Exception:
         db.rollback()
 
-        if "file_path" in locals() and os.path.exists(file_path):
-            os.remove(file_path)
+        if uploaded_to_storage and storage_path is not None:
+            try:
+                supabase.storage.from_(SUPABASE_BUCKET).remove(
+                    [storage_path]
+                )
+            except Exception:
+                pass
 
         raise
 
+
 def get_resumes(
-     db:Session,
-     current_user:User   
+    db: Session,
+    current_user: User,
 ) -> list[Resume]:
     stmt = (
         select(Resume)
-        .where(Resume.user_id==current_user.id)
+        .where(Resume.user_id == current_user.id)
         .order_by(Resume.uploaded_at.desc())
     )
-    resumes=db.scalars(stmt).all()
-    return resumes
+
+    return db.scalars(stmt).all()
+
 
 def get_resume_by_id(
-        resume_id:UUID,
-        db:Session,
-        current_user:User
+    resume_id: UUID,
+    db: Session,
+    current_user: User,
 ) -> Resume:
     resume = db.scalar(
-        select(Resume)
-        .where(Resume.id==resume_id)
+        select(Resume).where(Resume.id == resume_id)
     )
+
     if resume is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Resume not found"
+            detail="Resume not found",
         )
 
     if resume.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorised to access this resume"
+            detail="Not authorized to access this resume.",
         )
-    
+
     return resume
+
 
 def delete_resume(
     resume_id: UUID,
     db: Session,
     current_user: User,
 ) -> None:
-
     resume = db.scalar(
-        select(Resume)
-        .where(Resume.id == resume_id)
+        select(Resume).where(Resume.id == resume_id)
     )
 
     if resume is None:
@@ -133,8 +140,9 @@ def delete_resume(
         )
 
     try:
-        if os.path.exists(resume.file_path):
-            os.remove(resume.file_path)
+        supabase.storage.from_(SUPABASE_BUCKET).remove(
+            [resume.file_path]
+        )
 
         db.delete(resume)
         db.commit()
@@ -143,16 +151,15 @@ def delete_resume(
         db.rollback()
         raise
 
+
 def update_resume(
     resume_id: UUID,
     resume_update: ResumeUpdate,
     db: Session,
     current_user: User,
 ) -> Resume:
-
     resume = db.scalar(
-        select(Resume)
-        .where(Resume.id == resume_id)
+        select(Resume).where(Resume.id == resume_id)
     )
 
     if resume is None:
@@ -177,15 +184,14 @@ def update_resume(
 
     return resume
 
+
 def activate_resume(
     resume_id: UUID,
     db: Session,
     current_user: User,
 ) -> Resume:
-
     resume = db.scalar(
-        select(Resume)
-        .where(Resume.id == resume_id)
+        select(Resume).where(Resume.id == resume_id)
     )
 
     if resume is None:
@@ -204,8 +210,9 @@ def activate_resume(
         return resume
 
     user_resumes = db.scalars(
-        select(Resume)
-        .where(Resume.user_id == current_user.id)
+        select(Resume).where(
+            Resume.user_id == current_user.id
+        )
     ).all()
 
     for user_resume in user_resumes:
