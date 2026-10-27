@@ -1,7 +1,45 @@
 import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 export function AuthScreen({ onLogin }) {
-  const [mode, setMode] = useState('login'); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false)
-  async function submit(event) { event.preventDefault(); setMessage(''); setBusy(true); const values = Object.fromEntries(new FormData(event.currentTarget)); try { if (mode === 'register') { await api('/auth/register', { method: 'POST', body: values }); setMode('login'); event.currentTarget.reset(); setMessage('Account created — sign in to continue.') } else { const result = await api('/auth/login', { method: 'POST', body: values }); const profile = await api('/auth/me', { token: result.access_token }); onLogin(result.access_token, profile) } } catch (error) { setMessage(error.message) } finally { setBusy(false) } }
-  return <main className="auth-page"><section className="auth-intro"><div className="brand"><span className="brand-mark">P</span>Placeboard</div><div><p className="eyebrow">YOUR PLACEMENT COMMAND CENTER</p><h1>Turn every application into a clear next step.</h1><p>Keep companies, interviews, resumes, and preparation notes in one focused workspace.</p></div><div className="auth-quote">“A calm system for a high-stakes season.”</div></section><section className="auth-panel"><form className="auth-card" onSubmit={submit}><div><p className="eyebrow">{mode === 'login' ? 'WELCOME BACK' : 'CREATE YOUR ACCOUNT'}</p><h2>{mode === 'login' ? 'Sign in to Placeboard' : 'Start tracking with clarity'}</h2></div>{mode === 'register' && <><label>Full name<input name="full_name" required minLength="1" maxLength="100" placeholder="Aarav Sharma" /></label><label>Username<input name="username" required minLength="3" maxLength="50" placeholder="aarav" /></label></>}<label>Email address<input name="email" type="email" required placeholder="you@example.com" /></label><label>Password<input name="password" type="password" required minLength="8" placeholder="••••••••" /></label>{message && <p className={message.startsWith('Account created') ? 'form-success' : 'form-error'}>{message}</p>}<button className="button primary full" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</button><p className="auth-switch">{mode === 'login' ? 'New here?' : 'Already have an account?'} <button type="button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setMessage('') }}>{mode === 'login' ? 'Create an account' : 'Sign in'}</button></p></form></section></main>
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [formMessage, setFormMessage] = useState('')
+  const [busy, setBusy] = useState(false)
+  const mode = location.pathname === '/register' ? 'register' : 'login'
+  const message = formMessage || location.state?.message || ''
+
+  async function submit(event) {
+    event.preventDefault()
+    setFormMessage('')
+    setBusy(true)
+    const values = Object.fromEntries(new FormData(event.currentTarget))
+    try {
+      if (mode === 'register') {
+        await api('/auth/register', { method: 'POST', body: values })
+        event.currentTarget.reset()
+        const state = {
+          ...(location.state?.from ? { from: location.state.from } : {}),
+          message: 'Account created — sign in to continue.',
+        }
+        navigate('/login', { replace: true, state })
+      } else {
+        const result = await api('/auth/login', { method: 'POST', body: values })
+        const profile = await api('/auth/me', { token: result.access_token })
+        onLogin(result.access_token, profile)
+      }
+    } catch (error) {
+      setFormMessage(error.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function changeMode() {
+    setFormMessage('')
+    const state = location.state?.from ? { from: location.state.from } : null
+    navigate(mode === 'login' ? '/register' : '/login', { state })
+  }
+
+  return <main className="auth-page"><section className="auth-intro"><div className="brand"><span className="brand-mark">P</span>Placeboard</div><div><p className="eyebrow">YOUR PLACEMENT COMMAND CENTER</p><h1>Turn every application into a clear next step.</h1><p>Keep companies, interviews, resumes, and preparation notes in one focused workspace.</p></div><div className="auth-quote">“A calm system for a high-stakes season.”</div></section><section className="auth-panel"><form className="auth-card" onSubmit={submit}><div><p className="eyebrow">{mode === 'login' ? 'WELCOME BACK' : 'CREATE YOUR ACCOUNT'}</p><h2>{mode === 'login' ? 'Sign in to Placeboard' : 'Start tracking with clarity'}</h2></div>{mode === 'register' && <><label>Full name<input name="full_name" required minLength="1" maxLength="100" placeholder="Aarav Sharma" /></label><label>Username<input name="username" required minLength="3" maxLength="50" placeholder="aarav" /></label></>}<label>Email address<input name="email" type="email" required placeholder="you@example.com" /></label><label>Password<input name="password" type="password" required minLength="8" placeholder="••••••••" /></label>{message && <p className={message.startsWith('Account created') ? 'form-success' : 'form-error'}>{message}</p>}<button className="button primary full" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</button><p className="auth-switch">{mode === 'login' ? 'New here?' : 'Already have an account?'} <button type="button" onClick={changeMode}>{mode === 'login' ? 'Create an account' : 'Sign in'}</button></p></form></section></main>
 }
